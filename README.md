@@ -20,7 +20,7 @@ import (
 )
 
 func main() {
-	fmt.Println(buildmeta.Compiler) // => go1.18.3
+	fmt.Println(buildmeta.Compiler()) // => go1.18.3
 }
 ```
 

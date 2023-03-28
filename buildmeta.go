@@ -1,3 +1,4 @@
+// Package buildmeta holds build and runtime information
 package buildmeta
 
 import (
@@ -7,66 +8,76 @@ import (
 	"github.com/avakarev/go-timeutil"
 )
 
-// Build meta information, populated at build-time
 var (
 	// Commit is git commit sha
 	Commit string
-	// Compiler is Go compiler version
-	Compiler string
-	// Date is a build datetime in UTC
-	Date string
-	// LocalDate is a build datetime in `TZ`
-	LocalDate string
-	// Ref is git branch or tag ref
+
+	// Ref is git branch or tag ref name
 	Ref string
-	// Uptime is the application uptime
-	Uptime string
+
+	// BuildTimeUTC is a build datetime in UTC
+	BuildTimeUTC string
 )
+
+var (
+	// buildTimeLocal is a build datetime in local timezone
+	buildTimeLocal string
+
+	// uptime is the application's uptime
+	uptime string
+)
+
+// Compiler returns Go compiler version
+func Compiler() string {
+	return runtime.Version()
+}
+
+// OS returns running program's operating system target
+func OS() string {
+	return runtime.GOOS
+}
+
+// Arch returns running program's architecture target
+func Arch() string {
+	return runtime.GOARCH
+}
+
+// Uptime return server's uptime
+func Uptime() string {
+	return uptime
+}
+
+// Time returns server's local time
+func Time() string {
+	return timeutil.Local(time.Now()).Format(time.RFC3339)
+}
+
+// Timezone returns server's local timezone
+func Timezone() string {
+	return timeutil.Location.String()
+}
 
 // Fields returns build meta as map
 func Fields() map[string]interface{} {
 	return map[string]interface{}{
-		"commit":   Commit,
-		"ref":      Ref,
-		"compiler": Compiler,
-		"date":     LocalDate,
-		"uptime":   Uptime,
-	}
-}
+		"compiler": Compiler(),
+		"os":       OS(),
+		"arch":     Arch(),
 
-// Init initializes buildmeta
-func Init() error {
-	if Commit == "" {
-		Commit = "n/a"
-	}
-	Compiler = runtime.Version()
-	if Date == "" {
-		Date = "n/a"
-		LocalDate = "n/a"
-	}
-	if Date != "n/a" {
-		t, err := time.Parse(time.RFC3339, Date)
-		if err != nil {
-			return err
-		}
-		if !t.IsZero() {
-			LocalDate = timeutil.Local(t).Format(time.RFC3339)
-		}
-	}
-	if Ref == "" {
-		Ref = "n/a"
-	}
-	Uptime = timeutil.Local(time.Now()).Format(time.RFC3339)
-	return nil
-}
+		"commit":         Commit,
+		"ref":            Ref,
+		"buildTimeUTC":   BuildTimeUTC,
+		"buildTimeLocal": buildTimeLocal,
 
-// MustInit is like Init but panics in case of error
-func MustInit() {
-	if err := Init(); err != nil {
-		panic("buildmeta.MustInit(): " + err.Error())
+		"serverUptime":   uptime,
+		"serverTime":     Time(),
+		"serverTimezone": Timezone(),
 	}
 }
 
 func init() {
-	MustInit()
+	if t, err := time.Parse(time.RFC3339, BuildTimeUTC); err == nil && !t.IsZero() {
+		buildTimeLocal = timeutil.Local(t).Format(time.RFC3339)
+	}
+	uptime = timeutil.Local(time.Now()).Format(time.RFC3339)
 }
