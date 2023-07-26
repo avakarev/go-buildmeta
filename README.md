@@ -2,6 +2,11 @@
 
 > Tiny go module to hold build and runtime information
 
+# NOTE: deprecated, merged into https://github.com/avakarev/go-util
+
+> Scheduled for deletion after 2023-09-01
+
+
 ## Install
 
 ```shell
